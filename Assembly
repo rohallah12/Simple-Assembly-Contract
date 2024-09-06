@@ -1,0 +1,40 @@
+//memory allocation
+PUSH1 0x80
+PUSH1 0x40
+MSTORE
+
+//check if calldata is more than 0, revert, since we dont have a fallback
+CALLDATASIZE
+PUSH1 0x1c
+JUMPI
+
+//Store the msg.sender as the last caller in storage slot0
+PUSH1 0x00
+DUP1
+SLOAD
+//Loaded previous caller into stack, we need to clear dirty bits
+//to clear dirty bits:
+//1- left shift 1 by 160 bits
+//2- subtract it by 1 to set the lower 160 bits to 1
+//3- perform NOT to set all higher 96 bits to 1 and lower 160 bits to 0
+//4- perform AND with the previous address, in this phase all higher 96 bits are set to 0 and our previous address is correctly copied in the lower 160 bits
+//5- load caller into stack
+//6- perform OR between caller and the data we cleared
+//7- SSTORE
+PUSH1 0x01
+PUSH1 0x01
+PUSH1 0xa0
+SHR
+SUB
+NOT
+AND
+CALLER
+OR
+SWAP1
+SSTORE
+STOP
+
+JUMPDEST //0x0a
+PUSH1 0x0
+PUSH1 0x0
+REVERT
